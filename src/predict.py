@@ -29,7 +29,8 @@ from losses import *
 # PRE-TRAINED MODEL
 ###################
 
-model_dir = '../pretrained_models/ResUNet53D_125'
+# model_dir = '../pretrained_models/ResUNet53D_125'
+model_dir = '../pretrained_models/ResUNet5_125'
 n_img = 125
 
 #####################

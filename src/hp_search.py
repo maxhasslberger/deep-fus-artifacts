@@ -121,7 +121,8 @@ def main(n_img):
     print('Start processing: ' +today.strftime('%Y%m%d') +' ' +today.strftime('%H%M%S'))
     
     n_epochs = 2500
-    
+    n_epochs = 1
+
     # Create dict to store training parameters
     train_log = {}
     

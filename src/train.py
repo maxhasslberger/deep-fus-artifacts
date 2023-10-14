@@ -79,8 +79,9 @@ def main(n_img=125):
     
     print('Training ResUNet model with ' +str(n_img) +' images!')
     
-    n_epochs = 2500
-    
+    # n_epochs = 2500
+    n_epochs = 1
+
     ############
     # INITIALIZE 
     ############
@@ -105,9 +106,11 @@ def main(n_img=125):
     ##########
     
     # Load TRAIN and DEV datasets
-    X_train, Y_train = load_dataset('train', n_img, 740)
-    X_dev, Y_dev = load_dataset('dev', n_img, 40)
-    
+    # X_train, Y_train = load_dataset('train', n_img, 740)
+    X_train, Y_train = load_dataset('train', n_img, 30)
+    # X_dev, Y_dev = load_dataset('dev', n_img, 40)
+    X_dev, Y_dev = load_dataset('dev', n_img, 10)
+
     # Standardize X data
     Xmean = np.mean(X_train)
     Xstd = np.std(X_train)
@@ -178,7 +181,8 @@ def main(n_img=125):
     ###########################
     
     # Load TEST examples
-    X_test, Y_test = load_dataset('test', n_img, 40)
+    # X_test, Y_test = load_dataset('test', n_img, 40)
+    X_test, Y_test = load_dataset('test', n_img, 1)
     X_test = (X_test-Xmean) / Xstd
     
     # Predict TEST examples
