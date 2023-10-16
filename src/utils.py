@@ -26,6 +26,82 @@ import random
 import os
 import matplotlib.pyplot as plt
 
+
+def load_dataset_new(dataset, comp, m, comp_method='random'):
+    """
+    This function is used to load the training, validation, and test datasets.
+
+    Arguments:
+    dataset -- string for dataset. Accept: 'train', 'dev' or 'test'. Require set to be in the data folder
+    comp -- 0 <= compression factor <= 1
+    m -- number of sets to load. Select m sets after random permutation
+    comp_method -- compression method
+
+    Returns:
+    set_x, set_y -- pairs of features (compounded RF) and labels (power Doppler image) for each
+                    dataset
+    """
+
+    # The network was tested with images of 96x96 pixels. If this parameter is changed, the dimensions of train and dev examples must be changed accordingly
+    n_pix = 96
+    img_tot = 250
+
+    print('Loading ' + str(m) + ' ' + dataset + ' examples.')
+
+    # Initialize output arrays
+    set_x = np.zeros((m, n_pix, n_pix, img_tot))
+    set_y = np.zeros((m, n_pix, n_pix))
+
+    data_list = [i for i in range(m)]
+
+    # # Shuffle set list
+    # np.random.seed(1)
+    # np.random.shuffle(data_list)
+
+    # Create random ids for each compound frame
+    frac_tot = np.floor((1.0 - comp) * n_pix * n_pix)
+    sel_idx = random_selection(frac_tot, img_tot)
+
+    new_2d_dims = ((n_pix, n_pix) * np.sqrt(1 - comp)).astype(int)
+
+    for k in range(m):
+        # Load dataset
+        data_dir = '../data/' + dataset + '/fr' + str(k + 1) + '.mat'
+        mat_contents = sio.loadmat(data_dir)
+
+        idx = data_list[k]
+
+        # Pick selected indices for each compound frame
+        tmp_x = mat_contents['x'].reshape((n_pix * n_pix, img_tot))
+        reduced_x = np.zeros((frac_tot, img_tot))
+        for i in range(img_tot):
+            reduced_x[:, i] = tmp_x[sel_idx[:, i].astype(int), i]
+
+        # TODO: Zero padding to fit dimensions
+        set_x[idx] = reduced_x.reshape((new_2d_dims[0], new_2d_dims[1], img_tot))
+
+        set_y[idx] = mat_contents['y']
+
+    print('    Done loading ' + str(m) + ' ' + dataset + ' examples.')
+
+    return set_x, set_y, sel_idx
+
+
+def random_selection(frac_tot, img_tot):  # Random compound frame pixel selection
+
+    sel_idx = np.zeros((frac_tot, img_tot))
+    tmp_idx = np.array(range(img_tot))
+
+    for i in range(img_tot):
+        # Shuffle ids for current compound frame
+        np.random.shuffle(tmp_idx)
+        tmp_idx = tmp_idx.T
+        np.random.shuffle(tmp_idx)
+
+        sel_idx[:, i] = tmp_idx
+    return sel_idx
+
+
 def load_dataset(dataset, n_img, m):
     """
     This function is used to load the training, validation, and test datasets.
