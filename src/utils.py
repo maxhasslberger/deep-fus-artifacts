@@ -27,7 +27,7 @@ import os
 import matplotlib.pyplot as plt
 
 
-def load_dataset_new(dataset, comp, m, comp_method='random'):
+def load_dataset_new(dataset, comp, m, sel_idx=None, comp_method='random'):
     """
     This function is used to load the training, validation, and test datasets.
 
@@ -49,6 +49,8 @@ def load_dataset_new(dataset, comp, m, comp_method='random'):
     print('Loading ' + str(m) + ' ' + dataset + ' examples.')
 
     # Initialize output arrays
+    div_fac = 16
+    new_2d_dims = (np.ceil(n_pix * np.sqrt(1 - comp) / div_fac) * div_fac).astype(int)
     set_x = np.zeros((m, n_pix, n_pix, img_tot))
     set_y = np.zeros((m, n_pix, n_pix))
 
@@ -59,10 +61,9 @@ def load_dataset_new(dataset, comp, m, comp_method='random'):
     # np.random.shuffle(data_list)
 
     # Create random ids for each compound frame
-    frac_tot = np.floor((1.0 - comp) * n_pix * n_pix)
-    sel_idx = random_selection(frac_tot, img_tot)
-
-    new_2d_dims = ((n_pix, n_pix) * np.sqrt(1 - comp)).astype(int)
+    frac_tot = (np.floor((1.0 - comp) * n_pix * n_pix)).astype(int)
+    if sel_idx is None:  # If no indices are provided, create random indices
+        sel_idx = random_selection(img_tot, n_pix, frac_tot)
 
     for k in range(m):
         # Load dataset
@@ -73,12 +74,15 @@ def load_dataset_new(dataset, comp, m, comp_method='random'):
 
         # Pick selected indices for each compound frame
         tmp_x = mat_contents['x'].reshape((n_pix * n_pix, img_tot))
-        reduced_x = np.zeros((frac_tot, img_tot))
+        reduced_x = np.zeros((n_pix * n_pix, img_tot))
         for i in range(img_tot):
-            reduced_x[:, i] = tmp_x[sel_idx[:, i].astype(int), i]
+            reduced_x[:frac_tot, i] = tmp_x[sel_idx[:, i].astype(int), i]
 
-        # TODO: Zero padding to fit dimensions
-        set_x[idx] = reduced_x.reshape((new_2d_dims[0], new_2d_dims[1], img_tot))
+        # Zero padding to fit dimensions
+        reduced_x[frac_tot:, :] = np.zeros((n_pix * n_pix - frac_tot, img_tot))
+
+        # Reshape into image format
+        set_x[idx] = reduced_x.reshape((n_pix, n_pix, img_tot))
 
         set_y[idx] = mat_contents['y']
 
@@ -87,10 +91,74 @@ def load_dataset_new(dataset, comp, m, comp_method='random'):
     return set_x, set_y, sel_idx
 
 
-def random_selection(frac_tot, img_tot):  # Random compound frame pixel selection
+def load_dataset_reduce(dataset, comp, m, sel_idx=None, comp_method='random'):
+    """
+    This function is used to load the training, validation, and test datasets.
+
+    Arguments:
+    dataset -- string for dataset. Accept: 'train', 'dev' or 'test'. Require set to be in the data folder
+    comp -- 0 <= compression factor <= 1
+    m -- number of sets to load. Select m sets after random permutation
+    comp_method -- compression method
+
+    Returns:
+    set_x, set_y -- pairs of features (compounded RF) and labels (power Doppler image) for each
+                    dataset
+    """
+
+    # The network was tested with images of 96x96 pixels. If this parameter is changed, the dimensions of train and dev examples must be changed accordingly
+    n_pix = 96
+    img_tot = 250
+
+    print('Loading ' + str(m) + ' ' + dataset + ' examples.')
+
+    # Initialize output arrays
+    div_fac = 16
+    new_2d_dims = (np.ceil(n_pix * np.sqrt(1 - comp) / div_fac) * div_fac).astype(int)
+    set_x = np.zeros((m, new_2d_dims, new_2d_dims, img_tot))
+    set_y = np.zeros((m, n_pix, n_pix))
+
+    data_list = [i for i in range(m)]
+
+    # # Shuffle set list
+    # np.random.seed(1)
+    # np.random.shuffle(data_list)
+
+    # Create random ids for each compound frame
+    frac_tot = (np.floor((1.0 - comp) * n_pix * n_pix)).astype(int)
+    if sel_idx is None:  # If no indices are provided, create random indices
+        sel_idx = random_selection(img_tot, n_pix, frac_tot)
+
+    for k in range(m):
+        # Load dataset
+        data_dir = '../data/' + dataset + '/fr' + str(k + 1) + '.mat'
+        mat_contents = sio.loadmat(data_dir)
+
+        idx = data_list[k]
+
+        # Pick selected indices for each compound frame
+        tmp_x = mat_contents['x'].reshape((n_pix * n_pix, img_tot))
+        reduced_x = np.zeros((new_2d_dims * new_2d_dims, img_tot))
+        for i in range(img_tot):
+            reduced_x[:frac_tot, i] = tmp_x[sel_idx[:, i].astype(int), i]
+
+        # Zero padding to fit dimensions
+        reduced_x[frac_tot:, :] = np.zeros((new_2d_dims * new_2d_dims - frac_tot, img_tot))
+
+        # Reshape into image format
+        set_x[idx] = reduced_x.reshape((new_2d_dims, new_2d_dims, img_tot))
+
+        set_y[idx] = mat_contents['y']
+
+    print('    Done loading ' + str(m) + ' ' + dataset + ' examples.')
+
+    return set_x, set_y, sel_idx
+
+
+def random_selection(img_tot, n_pix, frac_tot):
 
     sel_idx = np.zeros((frac_tot, img_tot))
-    tmp_idx = np.array(range(img_tot))
+    tmp_idx = np.array(range(n_pix * n_pix))
 
     for i in range(img_tot):
         # Shuffle ids for current compound frame
@@ -98,7 +166,8 @@ def random_selection(frac_tot, img_tot):  # Random compound frame pixel selectio
         tmp_idx = tmp_idx.T
         np.random.shuffle(tmp_idx)
 
-        sel_idx[:, i] = tmp_idx
+        sel_idx[:, i] = tmp_idx[:frac_tot]
+
     return sel_idx
 
 

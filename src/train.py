@@ -41,11 +41,11 @@ from models import *
 from losses import *
 
 # Create and compile model
-def build_model(n_img):
+def build_model(input_shape):
     
     # Build model graph
     model = ResUNet53D(
-        input_shape = (96, 96, n_img),
+        input_shape = input_shape,
         do_rate=0.2,
         filt0_k12=3,
         filt0_k3=16
@@ -75,7 +75,7 @@ def build_model(n_img):
     
     return model
 
-def main(n_img=125):
+def main(n_img=250):
     
     print('Training ResUNet model with ' +str(n_img) +' images!')
     
@@ -106,10 +106,13 @@ def main(n_img=125):
     ##########
     
     # Load TRAIN and DEV datasets
+    compression = 0.6
     # X_train, Y_train = load_dataset('train', n_img, 740)
-    X_train, Y_train = load_dataset('train', n_img, 30)
+    # X_train, Y_train = load_dataset('train', n_img, 30)
+    X_train, Y_train, sel_idx = load_dataset_new('train', compression, 30)
     # X_dev, Y_dev = load_dataset('dev', n_img, 40)
-    X_dev, Y_dev = load_dataset('dev', n_img, 10)
+    # X_dev, Y_dev = load_dataset('dev', n_img, 10)
+    X_dev, Y_dev, _ = load_dataset_new('dev', compression, 10, sel_idx=sel_idx)
 
     # Standardize X data
     Xmean = np.mean(X_train)
@@ -135,7 +138,7 @@ def main(n_img=125):
     #############
     
     # Create model build
-    model = build_model(n_img)
+    model = build_model(X_train.shape[1:])
     
     # Train
     results = model.fit(X_train, 
@@ -182,7 +185,8 @@ def main(n_img=125):
     
     # Load TEST examples
     # X_test, Y_test = load_dataset('test', n_img, 40)
-    X_test, Y_test = load_dataset('test', n_img, 1)
+    # X_test, Y_test = load_dataset('test', n_img, 1)
+    X_test, Y_test, _ = load_dataset_new('test', compression, 1, sel_idx=sel_idx)
     X_test = (X_test-Xmean) / Xstd
     
     # Predict TEST examples
@@ -197,4 +201,4 @@ def main(n_img=125):
 # CALL MAIN TO EXECUTE
 ######################
 
-main(125)
+main(250)
