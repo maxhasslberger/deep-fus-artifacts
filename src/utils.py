@@ -22,12 +22,50 @@ import numpy as np
 import tensorflow as tf
 import json
 import scipy.io as sio
-import random
 import os
 import matplotlib.pyplot as plt
 
 
-def load_dataset_v4(dataset, comp, m, sel_idx=None, comp_method='random'):
+def lin_transition(img_tot, n_pix, comp):  # column-wise receptive field of compound frames -> transition
+
+    sz = np.ceil((1.0 - comp) * n_pix).astype(int)
+    sel_idx = np.zeros((n_pix * sz, img_tot))
+    all_idx = np.array(range(n_pix * n_pix)).reshape(n_pix, n_pix)
+    # idx_frac = (1.0 - comp) * img_tot
+    # idx_frac = img_tot / n_pix
+    # idx_frac = 1.0 / (1.0 - comp)
+    # scale_fac = (n_pix - 1) / (img_tot - 1)
+
+    fin_start = np.floor(n_pix - sz)  # final starting index
+    scale_fac = fin_start / (img_tot - 1)  # scale img_tot range to fin_start (max starting index)
+
+    for i in range(img_tot):
+        arg = np.floor(i * scale_fac).astype(int)
+        tmp_idx = all_idx[:, arg:arg + sz].reshape(-1)
+
+        sel_idx[:, i] = tmp_idx
+
+    return sel_idx.astype(int)
+
+
+def random_selection(img_tot, n_pix, comp):  # random selection of pixels per compound frame in sequence
+
+    frac_tot = (np.floor((1.0 - comp) * n_pix * n_pix)).astype(int)
+    sel_idx = np.zeros((frac_tot, img_tot))
+    tmp_idx = np.array(range(n_pix * n_pix))
+
+    for i in range(img_tot):
+        # Shuffle ids for current compound frame
+        np.random.shuffle(tmp_idx)
+        tmp_idx = tmp_idx.T
+        np.random.shuffle(tmp_idx)
+
+        sel_idx[:, i] = tmp_idx[:frac_tot]
+
+    return sel_idx.astype(int)
+
+
+def load_dataset_v4(dataset, comp, m, sel_idx=None, comp_method='linear'):
     """
     This function is used to load the training, validation, and test datasets. The utilized pixels keep their original
     positions. The rest is zero-padded.
@@ -36,7 +74,7 @@ def load_dataset_v4(dataset, comp, m, sel_idx=None, comp_method='random'):
     dataset -- string for dataset. Accept: 'train', 'dev' or 'test'. Require set to be in the data folder
     comp -- 0 <= compression factor <= 1
     m -- number of sets to load. Select m sets after random permutation
-    sel_idx -- indices of selected pixels. If None, random indices are generated
+    sel_idx -- indices of selected pixels. If None, generate index list based on comp_method
     comp_method -- compression method
 
     Returns:
@@ -61,9 +99,11 @@ def load_dataset_v4(dataset, comp, m, sel_idx=None, comp_method='random'):
     # np.random.shuffle(data_list)
 
     # Create random ids for each compound frame
-    frac_tot = (np.floor((1.0 - comp) * n_pix * n_pix)).astype(int)
     if sel_idx is None:  # If no indices are provided, create random indices
-        sel_idx = random_selection(img_tot, n_pix, frac_tot)
+        if comp_method == 'linear':
+            sel_idx = lin_transition(img_tot, n_pix, comp)
+        elif comp_method == 'random':
+            sel_idx = random_selection(img_tot, n_pix, comp)
 
     for k in range(m):
         # Load dataset
@@ -218,22 +258,6 @@ def load_dataset_reduce(dataset, comp, m, sel_idx=None, comp_method='random'):
     return set_x, set_y, sel_idx
 
 
-def random_selection(img_tot, n_pix, frac_tot):
-
-    sel_idx = np.zeros((frac_tot, img_tot))
-    tmp_idx = np.array(range(n_pix * n_pix))
-
-    for i in range(img_tot):
-        # Shuffle ids for current compound frame
-        np.random.shuffle(tmp_idx)
-        tmp_idx = tmp_idx.T
-        np.random.shuffle(tmp_idx)
-
-        sel_idx[:, i] = tmp_idx[:frac_tot]
-
-    return sel_idx.astype(int)
-
-
 def load_dataset(dataset, n_img, m):
     """
     This function is used to load the training, validation, and test datasets.
@@ -276,7 +300,6 @@ def load_dataset(dataset, n_img, m):
     print('    Done loading ' +str(m) +' ' +dataset +' examples.')
 
     return set_x, set_y
-
 
 
 def plot_and_stats(Yhat, Y, model_dir):
