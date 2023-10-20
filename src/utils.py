@@ -31,10 +31,6 @@ def lin_transition(img_tot, n_pix, comp):  # column-wise receptive field of comp
     sz = np.ceil((1.0 - comp) * n_pix).astype(int)
     sel_idx = np.zeros((n_pix * sz, img_tot))
     all_idx = np.array(range(n_pix * n_pix)).reshape(n_pix, n_pix)
-    # idx_frac = (1.0 - comp) * img_tot
-    # idx_frac = img_tot / n_pix
-    # idx_frac = 1.0 / (1.0 - comp)
-    # scale_fac = (n_pix - 1) / (img_tot - 1)
 
     fin_start = np.floor(n_pix - sz)  # final starting index
     scale_fac = fin_start / (img_tot - 1)  # scale img_tot range to fin_start (max starting index)
@@ -93,10 +89,6 @@ def load_dataset_v4(dataset, comp, m, sel_idx=None, comp_method='linear'):
     set_y = np.zeros((m, n_pix, n_pix))
 
     data_list = [i for i in range(m)]
-
-    # # Shuffle set list
-    # np.random.seed(1)
-    # np.random.shuffle(data_list)
 
     # Create random ids for each compound frame
     if sel_idx is None:  # If no indices are provided, create random indices
@@ -157,10 +149,6 @@ def load_dataset_v3(dataset, comp, m, sel_idx=None, comp_method='random'):
     set_y = np.zeros((m, n_pix, n_pix))
 
     data_list = [i for i in range(m)]
-
-    # # Shuffle set list
-    # np.random.seed(1)
-    # np.random.shuffle(data_list)
 
     # Create random ids for each compound frame
     frac_tot = (np.floor((1.0 - comp) * n_pix * n_pix)).astype(int)
@@ -223,10 +211,6 @@ def load_dataset_reduce(dataset, comp, m, sel_idx=None, comp_method='random'):
 
     data_list = [i for i in range(m)]
 
-    # # Shuffle set list
-    # np.random.seed(1)
-    # np.random.shuffle(data_list)
-
     # Create random ids for each compound frame
     frac_tot = (np.floor((1.0 - comp) * n_pix * n_pix)).astype(int)
     if sel_idx is None:  # If no indices are provided, create random indices
@@ -258,7 +242,7 @@ def load_dataset_reduce(dataset, comp, m, sel_idx=None, comp_method='random'):
     return set_x, set_y, sel_idx
 
 
-def load_dataset(dataset, n_img, m):
+def load_dataset_original(dataset, n_img, m):
     """
     This function is used to load the training, validation, and test datasets.
     
@@ -507,9 +491,3 @@ def load_dataset_postproc(dataset, n_img, m):
     print('    Done loading ' +str(m) +' ' +dataset +' examples.')
 
     return set_x, set_y
-
-
-def ind2sub(array_shape, ind):
-    rows = (ind.astype('int') / array_shape[1])
-    cols = (ind.astype('int') % array_shape[1])  # or numpy.mod(ind.astype('int'), array_shape[1])
-    return rows, cols
