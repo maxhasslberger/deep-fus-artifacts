@@ -281,7 +281,7 @@ def UNet53D(input_shape = (96, 96, 125), do_rate=0.5, filt0_k12=3, filt0_k3=8):
 
 
 
-def ResUNet53D(input_shape = (96, 96, 125), do_rate=0.5, filt0_k12=3, filt0_k3=8):
+def ResUNet53D(input_shape = (96, 96, 250), do_rate=0.5, filt0_k12=3, filt0_k3=8):
     """
     Implementation of a 5-layer U-Net model with residual blocks for the reconstruction of power 
     Doppler images from sparse compound data. This model includes an initial Conv3D block that 

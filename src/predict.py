@@ -31,7 +31,7 @@ from losses import *
 
 # model_dir = '../pretrained_models/ResUNet53D_125'
 model_dir = '../pretrained_models/ResUNet5_125'
-n_img = 125
+n_img = 250
 
 #####################
 # LOAD MODEL AND DATA
@@ -43,7 +43,8 @@ m = 40
 model = tf.keras.models.load_model(model_dir +'/my_model.h5', custom_objects={'loss': custom_loss(beta=0.1), 'ssim': ssim, 'psnr': psnr, 'nmse': nmse, 'nrmse': nrmse})
     
 # Load TEST examples
-X_test, Y_test = load_dataset('test', n_img, m)
+compression = 0.6
+X_test, Y_test, sel_idx = load_dataset_v4('test', compression, 1)
 
 # Standardize X data - use mean and standard deviation of training set
 Xmean = -0.5237595494149918
