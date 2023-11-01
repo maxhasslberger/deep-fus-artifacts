@@ -26,6 +26,28 @@ import os
 import matplotlib.pyplot as plt
 
 
+def displace_img(img, transl, rot):
+    """
+    This function is used to displace an image by a given amount of pixels in the x and y directions.
+    The image is zero-padded to avoid artifacts.
+
+    Arguments:
+    img -- image to be displaced -> [96, 96] -> float
+    transl -- translational displacement vector in pixels -> [x, y] -> int
+    rot -- rotation angle (origin) in degrees -> int
+
+    Returns:
+    img_disp -- displaced image -> [96, 96] -> float
+    """
+
+    # Initialize output array
+    img_disp = np.zeros(img.shape)
+
+    # Displace image - first rotation, then translation
+
+    return img_disp
+
+
 def lin_transition(img_tot, n_pix, comp):  # column-wise receptive field of compound frames -> transition
 
     sz = np.ceil((1.0 - comp) * n_pix).astype(int)
