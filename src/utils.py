@@ -25,6 +25,9 @@ import scipy.io as sio
 import os
 import matplotlib.pyplot as plt
 
+from scipy.stats import multinomial, norm
+from typing import List
+
 
 def displace_img(img, transl, rot):
     """
@@ -46,6 +49,131 @@ def displace_img(img, transl, rot):
     # Displace image - first rotation, then translation
 
     return img_disp
+
+
+def equilibrium_distribution(p_transition):
+    n_states = p_transition.shape[0]
+    A = np.append(
+        arr=p_transition.T - np.eye(n_states),
+        values=np.ones(n_states).reshape(1, -1),
+        axis=0
+    )
+    b = np.transpose(np.array([0] * n_states + [1]))
+    p_eq = np.linalg.solve(
+        a=np.transpose(A).dot(A),
+        b=np.transpose(A).dot(b)
+    )
+    return p_eq
+
+
+def markov_sequence(p_init: np.array, p_transition: np.array, sequence_length: int) -> List[int]:
+    """
+    Generate a Markov sequence based on p_init and p_transition.
+    """
+    if p_init is None:
+        p_init = equilibrium_distribution(p_transition)
+    initial_state = list(multinomial.rvs(1, p_init)).index(1)
+
+    states = [initial_state]
+    for _ in range(sequence_length - 1):
+        p_tr = p_transition[states[-1]]
+        new_state = list(multinomial.rvs(1, p_tr)).index(1)
+        states.append(new_state)
+    return states
+
+
+def ar_gaussian_heteroskedastic_emissions(states, k, sigmas, img_set):
+    emissions = []
+    prev_loc = [0.0, 0.0, 0.0]  # shift x, shift y, rotation
+
+    img_set_disp = np.zeros(img_set.shape)
+
+    for state in states:
+        e = norm.rvs(loc=k * np.array(prev_loc), scale=sigmas[state])
+        emissions.append(e)
+        prev_loc = e
+
+        # Displace images
+        e = np.round(e)
+        img_set_disp[:, :, state] = displace_img(img_set[:, :, state], e[:2], e[2])
+
+    return emissions, img_set_disp
+
+
+def exe_markov(img_set, n_img):
+    # Define Markov chain - state 0: no motion, state 1: motion
+    # p_init = np.array([0.5, 0.5])
+    rest2rest = 0.98
+    motion2motion = 0.8
+    p_transition = np.array([[rest2rest, 1 - rest2rest], [1 - motion2motion, motion2motion]])
+
+    # Generate Markov sequence
+    states = markov_sequence(None, p_transition, n_img)
+
+    # Define AR(1) process
+    k = 1
+    sigmas = [[0.4, 0.4, 0.2], [3, 3, 3.5]]  # [state, [x, y, rot]]
+
+    # Generate AR(1) process
+    emissions, img_set_disp = ar_gaussian_heteroskedastic_emissions(states, k, sigmas, img_set)  # [n_img, [x, y, rot]]
+
+    # Plot Markov sequence and AR(1) process
+    emissions = np.array(emissions).T
+
+    plt.figure()
+    plt.subplot(4, 1, 1)
+    plt.plot(states)
+    plt.subplot(4, 1, 2)
+    plt.plot(emissions[0])
+    plt.subplot(4, 1, 3)
+    plt.plot(emissions[1])
+    plt.subplot(4, 1, 4)
+    plt.plot(emissions[2])
+    plt.show()
+    plt.pause(1)
+
+    return img_set_disp
+
+
+def load_dataset_add_motion(dataset, n_img, m):
+    """
+    This function is used to load the training, validation, and test datasets.
+
+    Arguments:
+    dataset -- string for dataset. Accept: 'train', 'dev' or 'test'. Require set to be in the data folder
+    m -- number of sets to load. Select m sets after random permutation
+
+    Returns:
+    set_x, set_y -- pairs of features (compounded RF) and labels (power Doppler image) for each
+                    dataset
+    """
+
+    # The network was tested with images of 96x96 pixels. If this parameter is changed, the dimensions of train and dev examples must be changed accordingly
+    n_pix = 96
+
+    print('Loading ' + str(m) + ' ' + dataset + ' examples.')
+
+    # Initialize output arrays
+    set_x = np.zeros((m, n_pix, n_pix, n_img))
+    set_y = np.zeros((m, n_pix, n_pix))
+
+    data_list = [i for i in range(m)]
+
+    for k in range(m):
+        # Load dataset
+        data_dir = '../data/' + dataset + '/fr' + str(k + 1) + '.mat'
+        mat_contents = sio.loadmat(data_dir)
+
+        idx = data_list[k]
+
+        set_x_tmp = mat_contents['x'][:, :, :n_img]
+        set_x_mov = exe_markov(set_x_tmp, n_img)
+        set_x[idx] = set_x_mov
+        set_y[idx] = mat_contents['y']
+
+    print('    Done loading ' + str(m) + ' ' + dataset + ' examples.')
+
+    return set_x, set_y
 
 
 def lin_transition(img_tot, n_pix, comp):  # column-wise receptive field of compound frames -> transition

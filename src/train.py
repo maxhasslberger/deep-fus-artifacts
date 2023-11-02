@@ -109,10 +109,12 @@ def main(n_img=250):
     compression = 0.6
     # X_train, Y_train = load_dataset('train', n_img, 740)
     # X_train, Y_train = load_dataset('train', n_img, 30)
-    X_train, Y_train, sel_idx = load_dataset_v4('train', compression, 30)
+    # X_train, Y_train, sel_idx = load_dataset_v4('train', compression, 30)
+    X_train, Y_train, sel_idx = load_dataset_add_motion('train', n_img, 30)
     # X_dev, Y_dev = load_dataset('dev', n_img, 40)
     # X_dev, Y_dev = load_dataset('dev', n_img, 10)
-    X_dev, Y_dev, _ = load_dataset_v4('dev', compression, 10, sel_idx=sel_idx)
+    # X_dev, Y_dev, _ = load_dataset_v4('dev', compression, 10, sel_idx=sel_idx)
+    X_dev, Y_dev = load_dataset_add_motion('dev', n_img, 10)
 
     # Standardize X data
     Xmean = np.mean(X_train)
@@ -186,7 +188,8 @@ def main(n_img=250):
     # Load TEST examples
     # X_test, Y_test = load_dataset('test', n_img, 40)
     # X_test, Y_test = load_dataset('test', n_img, 1)
-    X_test, Y_test, _ = load_dataset_v4('test', compression, 3, sel_idx=sel_idx)
+    # X_test, Y_test, _ = load_dataset_v4('test', compression, 3, sel_idx=sel_idx)
+    X_test, Y_test = load_dataset_add_motion('test', n_img, 3)
     X_test = (X_test-Xmean) / Xstd
     
     # Predict TEST examples
