@@ -29,6 +29,29 @@ from scipy.stats import multinomial, norm
 from typing import List
 
 
+def open_dat_file(path):
+    """
+    This function is used to open a .dat file and return its content as a numpy array.
+
+    Arguments:
+    path -- path to the .dat file -> string
+
+    Returns:
+    data -- content of the .dat file -> numpy array
+    """
+
+    # Open .dat file
+    with open(path, 'rb') as f:
+        data = np.fromfile(f)
+
+    imageSize = (145, 128, -1)
+    data = data.reshape(imageSize)
+    # Display image
+    plt.imshow(data[:, :, 23], cmap='gray')
+
+    return data
+
+
 def displace_img(img, transl, rot):
     """
     This function is used to displace an image by a given amount of pixels in the x and y directions.
@@ -122,12 +145,17 @@ def exe_markov(img_set, n_img):
 
     plt.figure()
     plt.subplot(4, 1, 1)
+    plt.ylabel('State')
     plt.plot(states)
     plt.subplot(4, 1, 2)
+    plt.ylabel('dx (pix)')
     plt.plot(emissions[0])
     plt.subplot(4, 1, 3)
+    plt.ylabel('dy (pix)')
     plt.plot(emissions[1])
     plt.subplot(4, 1, 4)
+    plt.ylabel('drot (deg)')
+    plt.xlabel('# Image')
     plt.plot(emissions[2])
     plt.show()
     plt.pause(1)

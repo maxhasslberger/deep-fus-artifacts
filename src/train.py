@@ -81,6 +81,7 @@ def main(n_img=250):
     
     # n_epochs = 2500
     n_epochs = 1
+    data_new = open_dat_file("D:/riseo/Documents/TUM/4 Sem - AUC/Machine Learning/fUS Project/Emilie Data/Compounds/bf0part000.dat")
 
     ############
     # INITIALIZE 
