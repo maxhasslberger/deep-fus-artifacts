@@ -40,9 +40,17 @@ def open_dat_file(path):
     data -- content of the .dat file -> numpy array
     """
 
-    # Open .dat file
-    with open(path, 'rb') as f:
-        data = np.fromfile(f)
+    # Open .dat files
+    data = np.array([])
+    for i in range(6):
+        path_x = path + 'bf0part00' + str(i) + '.dat'
+        with open(path_x, 'rb') as f:
+            data = np.concatenate((data, np.fromfile(f)), axis=0)
+
+    for i in range(6):
+        path_x = path + 'bf1part00' + str(i) + '.dat'
+        with open(path_x, 'rb') as f:
+            data = np.concatenate((data, np.fromfile(f)), axis=0)
 
     imageSize = (145, 128, -1)
     data = data.reshape(imageSize)
