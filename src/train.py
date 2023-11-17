@@ -81,7 +81,7 @@ def main(n_img=250):
     
     # n_epochs = 2500
     n_epochs = 1
-    data_new = open_dat_file("D:/riseo/Documents/TUM/4 Sem - AUC/Machine Learning/fUS Project/Emilie Data/Compounds/")
+    # data_new = open_dat_file("D:/riseo/Documents/TUM/4 Sem - AUC/Machine Learning/fUS Project/Emilie Data/Compounds/")
 
     ############
     # INITIALIZE 
@@ -111,7 +111,7 @@ def main(n_img=250):
     # X_train, Y_train = load_dataset('train', n_img, 740)
     # X_train, Y_train = load_dataset('train', n_img, 30)
     # X_train, Y_train, sel_idx = load_dataset_v4('train', compression, 30)
-    X_train, Y_train, sel_idx = load_dataset_add_motion('train', n_img, 30)
+    X_train, Y_train = load_dataset_add_motion('train', n_img, 30)
     # X_dev, Y_dev = load_dataset('dev', n_img, 40)
     # X_dev, Y_dev = load_dataset('dev', n_img, 10)
     # X_dev, Y_dev, _ = load_dataset_v4('dev', compression, 10, sel_idx=sel_idx)

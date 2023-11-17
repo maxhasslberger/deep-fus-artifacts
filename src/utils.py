@@ -26,6 +26,7 @@ import os
 import matplotlib.pyplot as plt
 
 from scipy.stats import multinomial, norm
+from scipy.ndimage import gaussian_filter
 from typing import List
 
 
@@ -119,6 +120,7 @@ def ar_gaussian_heteroskedastic_emissions(states, k, sigmas, img_set):
 
     img_set_disp = np.zeros(img_set.shape)
 
+    i = 0
     for state in states:
         e = norm.rvs(loc=k * np.array(prev_loc), scale=sigmas[state])
         emissions.append(e)
@@ -126,7 +128,8 @@ def ar_gaussian_heteroskedastic_emissions(states, k, sigmas, img_set):
 
         # Displace images
         e = np.round(e)
-        img_set_disp[:, :, state] = displace_img(img_set[:, :, state], e[:2], e[2])
+        img_set_disp[:, :, i] = displace_img(img_set[:, :, i], e[:2], e[2])
+        i += 1
 
     return emissions, img_set_disp
 
@@ -151,24 +154,41 @@ def exe_markov(img_set, n_img):
     # Plot Markov sequence and AR(1) process
     emissions = np.array(emissions).T
 
-    plt.figure()
-    plt.subplot(4, 1, 1)
-    plt.ylabel('State')
-    plt.plot(states)
-    plt.subplot(4, 1, 2)
-    plt.ylabel('dx (pix)')
-    plt.plot(emissions[0])
-    plt.subplot(4, 1, 3)
-    plt.ylabel('dy (pix)')
-    plt.plot(emissions[1])
-    plt.subplot(4, 1, 4)
-    plt.ylabel('drot (deg)')
-    plt.xlabel('# Image')
-    plt.plot(emissions[2])
+    # plt.figure()
+    # plt.subplot(4, 1, 1)
+    # plt.ylabel('State')
+    # plt.plot(states)
+    # plt.subplot(4, 1, 2)
+    # plt.ylabel('dx (pix)')
+    # plt.plot(emissions[0])
+    # plt.subplot(4, 1, 3)
+    # plt.ylabel('dy (pix)')
+    # plt.plot(emissions[1])
+    # plt.subplot(4, 1, 4)
+    # plt.ylabel('drot (deg)')
+    # plt.xlabel('# Image')
+    # plt.plot(emissions[2])
+    # plt.show()
+    # plt.pause(1)
+
+    return img_set_disp
+
+
+def blur_seq(img_set, n_img):
+    # Blur images
+    img_set_blur = np.zeros(img_set.shape)
+    for i in range(n_img):
+        img_set_blur[:, :, i] = gaussian_filter(img_set[:, :, i], sigma=0)
+
+    fig, ax = plt.subplots()
+    cs = ax.imshow(img_set_blur[:, :, 22], cmap='bone')
+    fig, ax = plt.subplots()
+    cs = ax.imshow(img_set[:, :, 22], cmap='bone')
+    # cbar = fig.colorbar(cs)
     plt.show()
     plt.pause(1)
 
-    return img_set_disp
+    return img_set_blur
 
 
 def load_dataset_add_motion(dataset, n_img, m):
@@ -203,7 +223,8 @@ def load_dataset_add_motion(dataset, n_img, m):
         idx = data_list[k]
 
         set_x_tmp = mat_contents['x'][:, :, :n_img]
-        set_x_mov = exe_markov(set_x_tmp, n_img)
+        # set_x_mov = exe_markov(set_x_tmp, n_img)
+        set_x_mov = blur_seq(set_x_tmp, n_img)
         set_x[idx] = set_x_mov
         set_y[idx] = mat_contents['y']
 
