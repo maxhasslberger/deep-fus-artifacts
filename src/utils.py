@@ -184,11 +184,12 @@ def exe_markov(img_set, n_img):
     return img_set_disp
 
 
-def blur_seq(img_set, n_img, sigma_max=2, sig_frac=0.1):
+def blur_seq(img_set, n_img, sigma_max=2, dist_std=0.33, sig_frac=0.1):
 
     # sample sigma between 0 and sigma_max
-    sigma = np.random.uniform(0, sigma_max, 1)  # One center sigma for all images
-    # print(sigma)
+    sigma = np.abs(np.random.normal(0, sigma_max * dist_std, 1))  # One central sigma for all images
+    sigma = min(sigma, sigma_max)
+    print(sigma)
     sigma = np.random.uniform(sigma * (1 - sig_frac), sigma * (1 + sig_frac), n_img)  # individual sigma for each image
 
     # Blur images
