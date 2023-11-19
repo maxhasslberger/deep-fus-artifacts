@@ -151,9 +151,19 @@ def exe_markov(img_set, n_img):
     # Generate AR(1) process
     emissions, img_set_disp = ar_gaussian_heteroskedastic_emissions(states, k, sigmas, img_set)  # [n_img, [x, y, rot]]
 
+    # Example plot
+    fig, ax = plt.subplots()
+    cs = ax.imshow(img_set_disp[:, :, 22], cmap='bone')
+    fig, ax = plt.subplots()
+    cs = ax.imshow(img_set[:, :, 22], cmap='bone')
+    # cbar = fig.colorbar(cs)
+    plt.show()
+    plt.pause(1)
+
     # Plot Markov sequence and AR(1) process
     emissions = np.array(emissions).T
 
+    # # Markov plot
     # plt.figure()
     # plt.subplot(4, 1, 1)
     # plt.ylabel('State')
@@ -174,12 +184,19 @@ def exe_markov(img_set, n_img):
     return img_set_disp
 
 
-def blur_seq(img_set, n_img):
+def blur_seq(img_set, n_img, sigma_max=2, sig_frac=0.1):
+
+    # sample sigma between 0 and sigma_max
+    sigma = np.random.uniform(0, sigma_max, 1)  # One center sigma for all images
+    # print(sigma)
+    sigma = np.random.uniform(sigma * (1 - sig_frac), sigma * (1 + sig_frac), n_img)  # individual sigma for each image
+
     # Blur images
     img_set_blur = np.zeros(img_set.shape)
     for i in range(n_img):
-        img_set_blur[:, :, i] = gaussian_filter(img_set[:, :, i], sigma=0)
+        img_set_blur[:, :, i] = gaussian_filter(img_set[:, :, i], sigma=sigma[i])
 
+    # Example plot
     fig, ax = plt.subplots()
     cs = ax.imshow(img_set_blur[:, :, 22], cmap='bone')
     fig, ax = plt.subplots()
@@ -223,8 +240,10 @@ def load_dataset_add_motion(dataset, n_img, m):
         idx = data_list[k]
 
         set_x_tmp = mat_contents['x'][:, :, :n_img]
-        # set_x_mov = exe_markov(set_x_tmp, n_img)
+
+        # set_x_tmp = exe_markov(set_x_tmp, n_img)
         set_x_mov = blur_seq(set_x_tmp, n_img)
+
         set_x[idx] = set_x_mov
         set_y[idx] = mat_contents['y']
 
