@@ -600,42 +600,44 @@ def plot_and_stats(Yhat, Y, model_dir):
         fig, ax = plt.subplots()
         cs = ax.imshow(Y_dB, vmin=-dr, vmax=0, cmap='bone')
         cbar = fig.colorbar(cs)
-        plt.show()
         plt.title('Original ' +str(idx))
         plt.savefig(loc_dir +'/orig' +str(idx) +'.png')
+        plt.show()
         plt.close(fig)
 
         # Plot Yhat
         fig, ax = plt.subplots()
         cs = ax.imshow(Yhat_dB, vmin=-dr, vmax=0, cmap='bone')
         cbar = fig.colorbar(cs)
-        plt.show()
         plt.title('Pred ' +str(idx) +' - SSIM: ' +'{:.03f}'.format(ssim_tmp) +' - PSNR: ' +'{:.03f}'.format(psnr_tmp) +' - NMSE: ' +'{:.03f}'.format(nmse_tmp) +' - NRMSE: ' +'{:.03f}'.format(nrmse_tmp) )
         plt.savefig(loc_dir +'/pred' +str(idx) +'.png')
+        plt.show()
         plt.close(fig)
+
+        # Scatter plot
+        y1 = np.copy(Y_dB)
+        y2 = np.copy(Yhat_dB)
+        # fig, ax = plt.subplots()
+        plt.scatter(y1.flatten(), y2.flatten(), marker='o', color='black')
+        x = np.linspace(-40, 0, 41)
+        plt.plot(x, x);
+        plt.xlabel('True')
+        plt.ylabel('Pred')
+        # plt.show()
+        plt.savefig(loc_dir +'/scatt' +str(idx) +'.png')
+        # plt.waitforbuttonpress()
+        # plt.close(fig)
 
         # Plot difference
         img_diff = np.abs(Yhat_dB-Y_dB)
         fig, ax = plt.subplots()
         cs = ax.imshow(img_diff, cmap='bone')
         cbar = fig.colorbar(cs)
-        plt.show()
         plt.title('Difference ' +str(idx))
         plt.savefig(loc_dir +'/diff' +str(idx) +'.png')
+        plt.show()
         plt.close(fig)
 
-        # Scatter plot
-        y1 = np.copy(Y_dB)
-        y2 = np.copy(Yhat_dB)
-        fig, ax = plt.subplots()
-        plt.scatter(y1.flatten(), y2.flatten(), marker='o', color='black')
-        x = np.linspace(-40, 0, 41)
-        plt.plot(x, x);
-        plt.xlabel('True')
-        plt.ylabel('Pred')
-        plt.show()
-        plt.savefig(loc_dir +'/scatt' +str(idx) +'.png')
-        plt.close(fig)
 
     ######################
     # SAVE METRICS TO FILE

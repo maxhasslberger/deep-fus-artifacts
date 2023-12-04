@@ -19,13 +19,13 @@ n_img = 100
 # LOAD MODEL AND DATA
 #####################
 
-m = 40
+m = 3
 
 # Load model 
 model = tf.keras.models.load_model(model_dir +'/my_model.h5', custom_objects={'loss': custom_loss(beta=0.1), 'ssim': ssim, 'psnr': psnr, 'nmse': nmse, 'nrmse': nrmse})
     
 # Load TEST examples
-X_test, Y_test = load_dataset_add_motion('test', n_img, 3, distort=False)
+X_test, Y_test = load_dataset_add_motion('test', n_img, m, distort=False)
 
 # Standardize X data - use mean and standard deviation of training set
 Xmean = -0.5237595494149918
