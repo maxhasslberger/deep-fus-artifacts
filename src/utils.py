@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import multinomial, norm
 from scipy.ndimage import gaussian_filter
 from typing import List
+from scipy.ndimage import shift, rotate
 
 
 def open_dat_file(path):
@@ -76,9 +77,13 @@ def displace_img(img, transl, rot):
     """
 
     # Initialize output array
-    img_disp = np.zeros(img.shape)
+    img_disp = np.zeros_like(img)
 
-    # Displace image - first rotation, then translation
+    # Displace image
+    img_disp = shift(img, transl, mode='constant', cval=0)
+
+    # Rotate image
+    img_disp = rotate(img_disp, rot, reshape=False, mode='constant', cval=0)
 
     return img_disp
 
