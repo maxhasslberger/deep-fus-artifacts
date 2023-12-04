@@ -25,6 +25,42 @@ import scipy.io as sio
 import os
 import matplotlib.pyplot as plt
 
+from scipy.stats import multinomial, norm
+from scipy.ndimage import gaussian_filter
+from typing import List
+from scipy.ndimage import shift, rotate
+
+
+def open_dat_file(path):
+    """
+    This function is used to open a .dat file and return its content as a numpy array.
+
+    Arguments:
+    path -- path to the .dat file -> string
+
+    Returns:
+    data -- content of the .dat file -> numpy array
+    """
+
+    # Open .dat files
+    data = np.array([])
+    for i in range(6):
+        path_x = path + 'bf0part00' + str(i) + '.dat'
+        with open(path_x, 'rb') as f:
+            data = np.concatenate((data, np.fromfile(f)), axis=0)
+
+    for i in range(6):
+        path_x = path + 'bf1part00' + str(i) + '.dat'
+        with open(path_x, 'rb') as f:
+            data = np.concatenate((data, np.fromfile(f)), axis=0)
+
+    imageSize = (145, 128, -1)
+    data = data.reshape(imageSize)
+    # Display image
+    plt.imshow(data[:, :, 23], cmap='gray')
+
+    return data
+
 
 def displace_img(img, transl, rot):
     """
@@ -41,11 +77,185 @@ def displace_img(img, transl, rot):
     """
 
     # Initialize output array
-    img_disp = np.zeros(img.shape)
+    img_disp = np.zeros_like(img)
 
-    # Displace image - first rotation, then translation
+    # Displace image
+    img_disp = shift(img, transl, mode='constant', cval=0)
+
+    # Rotate image
+    img_disp = rotate(img_disp, rot, reshape=False, mode='constant', cval=0)
 
     return img_disp
+
+
+def equilibrium_distribution(p_transition):
+    n_states = p_transition.shape[0]
+    A = np.append(
+        arr=p_transition.T - np.eye(n_states),
+        values=np.ones(n_states).reshape(1, -1),
+        axis=0
+    )
+    b = np.transpose(np.array([0] * n_states + [1]))
+    p_eq = np.linalg.solve(
+        a=np.transpose(A).dot(A),
+        b=np.transpose(A).dot(b)
+    )
+    return p_eq
+
+
+def markov_sequence(p_init: np.array, p_transition: np.array, sequence_length: int) -> List[int]:
+    """
+    Generate a Markov sequence based on p_init and p_transition.
+    """
+    if p_init is None:
+        p_init = equilibrium_distribution(p_transition)
+    initial_state = list(multinomial.rvs(1, p_init)).index(1)
+
+    states = [initial_state]
+    for _ in range(sequence_length - 1):
+        p_tr = p_transition[states[-1]]
+        new_state = list(multinomial.rvs(1, p_tr)).index(1)
+        states.append(new_state)
+    return states
+
+
+def ar_gaussian_heteroskedastic_emissions(states, k, sigmas, img_set):
+    emissions = []
+    prev_loc = [0.0, 0.0, 0.0]  # shift x, shift y, rotation
+
+    img_set_disp = np.zeros(img_set.shape)
+
+    i = 0
+    for state in states:
+        e = norm.rvs(loc=k * np.array(prev_loc), scale=sigmas[state])
+        emissions.append(e)
+        prev_loc = e
+
+        # Displace images
+        e = np.round(e)
+        img_set_disp[:, :, i] = displace_img(img_set[:, :, i], e[:2], e[2])
+        i += 1
+
+    return emissions, img_set_disp
+
+
+def exe_markov(img_set, n_img):
+    # Define Markov chain - state 0: no motion, state 1: motion
+    # p_init = np.array([0.5, 0.5])
+    rest2rest = 0.98
+    motion2motion = 0.8
+    p_transition = np.array([[rest2rest, 1 - rest2rest], [1 - motion2motion, motion2motion]])
+
+    # Generate Markov sequence
+    states = markov_sequence(None, p_transition, n_img)
+
+    # Define AR(1) process
+    k = 1
+    sigmas = [[0.4, 0.4, 0.2], [3, 3, 3.5]]  # [state, [x, y, rot]]
+
+    # Generate AR(1) process
+    emissions, img_set_disp = ar_gaussian_heteroskedastic_emissions(states, k, sigmas, img_set)  # [n_img, [x, y, rot]]
+
+    # Example plot
+    fig, ax = plt.subplots()
+    cs = ax.imshow(img_set_disp[:, :, 22], cmap='bone')
+    fig, ax = plt.subplots()
+    cs = ax.imshow(img_set[:, :, 22], cmap='bone')
+    # cbar = fig.colorbar(cs)
+    plt.show()
+    plt.pause(1)
+
+    # Plot Markov sequence and AR(1) process
+    emissions = np.array(emissions).T
+
+    # # Markov plot
+    # plt.figure()
+    # plt.subplot(4, 1, 1)
+    # plt.ylabel('State')
+    # plt.plot(states)
+    # plt.subplot(4, 1, 2)
+    # plt.ylabel('dx (pix)')
+    # plt.plot(emissions[0])
+    # plt.subplot(4, 1, 3)
+    # plt.ylabel('dy (pix)')
+    # plt.plot(emissions[1])
+    # plt.subplot(4, 1, 4)
+    # plt.ylabel('drot (deg)')
+    # plt.xlabel('# Image')
+    # plt.plot(emissions[2])
+    # plt.show()
+    # plt.pause(1)
+
+    return img_set_disp
+
+
+def blur_seq(img_set, n_img, sigma_max=2, dist_std=0.33, sig_frac=0.1):
+
+    # sample sigma between 0 and sigma_max
+    sigma = np.abs(np.random.normal(0, sigma_max * dist_std, 1))  # One central sigma for all images
+    sigma = min(sigma, sigma_max)
+    print(sigma)
+    sigma = np.random.uniform(sigma * (1 - sig_frac), sigma * (1 + sig_frac), n_img)  # individual sigma for each image
+
+    # Blur images
+    img_set_blur = np.zeros(img_set.shape)
+    for i in range(n_img):
+        img_set_blur[:, :, i] = gaussian_filter(img_set[:, :, i], sigma=sigma[i])
+
+    # Example plot
+    fig, ax = plt.subplots()
+    cs = ax.imshow(img_set_blur[:, :, 22], cmap='bone')
+    fig, ax = plt.subplots()
+    cs = ax.imshow(img_set[:, :, 22], cmap='bone')
+    # cbar = fig.colorbar(cs)
+    plt.show()
+    plt.pause(1)
+
+    return img_set_blur
+
+
+def load_dataset_add_motion(dataset, n_img, m):
+    """
+    This function is used to load the training, validation, and test datasets.
+
+    Arguments:
+    dataset -- string for dataset. Accept: 'train', 'dev' or 'test'. Require set to be in the data folder
+    m -- number of sets to load. Select m sets after random permutation
+
+    Returns:
+    set_x, set_y -- pairs of features (compounded RF) and labels (power Doppler image) for each
+                    dataset
+    """
+
+    # The network was tested with images of 96x96 pixels. If this parameter is changed, the dimensions of train and dev examples must be changed accordingly
+    n_pix = 96
+
+    print('Loading ' + str(m) + ' ' + dataset + ' examples.')
+
+    # Initialize output arrays
+    set_x = np.zeros((m, n_pix, n_pix, n_img))
+    set_y = np.zeros((m, n_pix, n_pix))
+
+    data_list = [i for i in range(m)]
+
+    for k in range(m):
+        # Load dataset
+        data_dir = '../data/' + dataset + '/fr' + str(k + 1) + '.mat'
+        mat_contents = sio.loadmat(data_dir)
+
+        idx = data_list[k]
+
+        set_x_tmp = mat_contents['x'][:, :, :n_img]
+
+        # set_x_tmp = exe_markov(set_x_tmp, n_img)
+        set_x_mov = blur_seq(set_x_tmp, n_img)
+
+        set_x[idx] = set_x_mov
+        set_y[idx] = mat_contents['y']
+
+    print('    Done loading ' + str(m) + ' ' + dataset + ' examples.')
+
+    return set_x, set_y
 
 
 def lin_transition(img_tot, n_pix, comp):  # column-wise receptive field of compound frames -> transition
