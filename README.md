@@ -15,6 +15,8 @@ Training, validation, and testing datasets are made of pairs of compound data fr
 
 We have not yet made training and validation sets publicly available, as we're using unpublished data. Please reach out if you're interested.
 
+## Data augmentation
+To train a new model with a sparse dataset, it might make sense (e.g. when using the distortion options) to augment the available data samples. To do so, one may use the Matlab script `Matlab data_augmentation.m` in the [data](data) folder.
 
 ## Running the neural network
 `python predict.py` can be executed to reconstruct images based on a pre-trained model. Use the 'pretrained_models' folder containing a .h5 file and copy it into the 'deep-fus-artifacts' folder. Use one of these models to reconstruct the power Doppler images stored in [data/test](data/test). `python train.py` can be used to train the model based on the datasets in the folders [data/train](data/train) and [data/dev](data/dev).
