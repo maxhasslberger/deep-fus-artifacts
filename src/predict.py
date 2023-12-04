@@ -12,7 +12,7 @@ from losses import *
 ###################
 
 # model_dir = '../pretrained_models/ResUNet53D_125'
-model_dir = '../pretrained_models/custom'
+model_dir = '../../pretrained_models/custom'
 n_img = 100
 
 #####################
@@ -25,7 +25,7 @@ m = 40
 model = tf.keras.models.load_model(model_dir +'/my_model.h5', custom_objects={'loss': custom_loss(beta=0.1), 'ssim': ssim, 'psnr': psnr, 'nmse': nmse, 'nrmse': nrmse})
     
 # Load TEST examples
-X_test, Y_test = load_dataset_add_motion('test', n_img, 3)
+X_test, Y_test = load_dataset_add_motion('test', n_img, 3, distort=False)
 
 # Standardize X data - use mean and standard deviation of training set
 Xmean = -0.5237595494149918

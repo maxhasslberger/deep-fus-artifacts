@@ -196,7 +196,7 @@ def blur_seq(img_set, n_img, sigma_max=2, dist_std=0.33, sig_frac=0.1):
     return img_set_blur
 
 
-def load_dataset_add_motion(dataset, n_img, m):
+def load_dataset_add_motion(dataset, n_img, m, distort=True):
     """
     This function is used to load the training, validation, and test datasets.
 
@@ -229,10 +229,11 @@ def load_dataset_add_motion(dataset, n_img, m):
 
         set_x_tmp = mat_contents['x'][:, :, :n_img]
 
-        # set_x_tmp = exe_markov(set_x_tmp, n_img)
-        set_x_mov = blur_seq(set_x_tmp, n_img)
+        if distort:
+            # set_x_tmp = exe_markov(set_x_tmp, n_img)
+            set_x_tmp = blur_seq(set_x_tmp, n_img)
 
-        set_x[idx] = set_x_mov
+        set_x[idx] = set_x_tmp
         set_y[idx] = mat_contents['y']
 
     print('    Done loading ' + str(m) + ' ' + dataset + ' examples.')
