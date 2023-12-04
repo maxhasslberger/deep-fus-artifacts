@@ -1,21 +1,3 @@
-"""
-File:     deep-fus/src/train.py
-Author:   Tommaso Di Ianni (todiian@stanford.edu)
-
-Copyright 2021 Tommaso Di Ianni
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 # Import packages
 import numpy as np
@@ -75,7 +57,7 @@ def build_model(input_shape):
     
     return model
 
-def main(n_img=250):
+def main(n_img=100):
     
     print('Training ResUNet model with ' +str(n_img) +' images!')
     
@@ -107,14 +89,7 @@ def main(n_img=250):
     ##########
     
     # Load TRAIN and DEV datasets
-    compression = 0.6
-    # X_train, Y_train = load_dataset('train', n_img, 740)
-    # X_train, Y_train = load_dataset('train', n_img, 30)
-    # X_train, Y_train, sel_idx = load_dataset_v4('train', compression, 30)
     X_train, Y_train = load_dataset_add_motion('train', n_img, 30)
-    # X_dev, Y_dev = load_dataset('dev', n_img, 40)
-    # X_dev, Y_dev = load_dataset('dev', n_img, 10)
-    # X_dev, Y_dev, _ = load_dataset_v4('dev', compression, 10, sel_idx=sel_idx)
     X_dev, Y_dev = load_dataset_add_motion('dev', n_img, 10)
 
     # Standardize X data
@@ -187,9 +162,6 @@ def main(n_img=250):
     ###########################
     
     # Load TEST examples
-    # X_test, Y_test = load_dataset('test', n_img, 40)
-    # X_test, Y_test = load_dataset('test', n_img, 1)
-    # X_test, Y_test, _ = load_dataset_v4('test', compression, 3, sel_idx=sel_idx)
     X_test, Y_test = load_dataset_add_motion('test', n_img, 3)
     X_test = (X_test-Xmean) / Xstd
     
@@ -205,4 +177,4 @@ def main(n_img=250):
 # CALL MAIN TO EXECUTE
 ######################
 
-main(250)
+main(100)

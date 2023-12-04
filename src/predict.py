@@ -1,21 +1,3 @@
-"""
-File:     deep-fus/src/predict.py
-Author:   Tommaso Di Ianni (todiian@stanford.edu)
-
-Copyright 2021 Tommaso Di Ianni
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 # Import packages
 import tensorflow as tf
@@ -30,8 +12,8 @@ from losses import *
 ###################
 
 # model_dir = '../pretrained_models/ResUNet53D_125'
-model_dir = '../pretrained_models/ResUNet5_125'
-n_img = 250
+model_dir = '../pretrained_models/custom'
+n_img = 100
 
 #####################
 # LOAD MODEL AND DATA
@@ -43,8 +25,6 @@ m = 40
 model = tf.keras.models.load_model(model_dir +'/my_model.h5', custom_objects={'loss': custom_loss(beta=0.1), 'ssim': ssim, 'psnr': psnr, 'nmse': nmse, 'nrmse': nrmse})
     
 # Load TEST examples
-compression = 0.6
-# X_test, Y_test, sel_idx = load_dataset_v4('test', compression, 1)
 X_test, Y_test = load_dataset_add_motion('test', n_img, 3)
 
 # Standardize X data - use mean and standard deviation of training set
