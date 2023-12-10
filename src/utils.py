@@ -176,7 +176,7 @@ def blur_seq(img_set, n_img, sigma_max=2, dist_std=0.33, sig_frac=0.1):
     # sample sigma between 0 and sigma_max
     sigma = np.abs(np.random.normal(0, sigma_max * dist_std, 1))  # One central sigma for all images
     sigma = min(sigma, sigma_max)
-    print(sigma)
+    # print(sigma)
     sigma = np.random.uniform(sigma * (1 - sig_frac), sigma * (1 + sig_frac), n_img)  # individual sigma for each image
 
     # Blur images
@@ -184,14 +184,14 @@ def blur_seq(img_set, n_img, sigma_max=2, dist_std=0.33, sig_frac=0.1):
     for i in range(n_img):
         img_set_blur[:, :, i] = gaussian_filter(img_set[:, :, i], sigma=sigma[i])
 
-    # Example plot
-    fig, ax = plt.subplots()
-    cs = ax.imshow(img_set_blur[:, :, 22], cmap='bone')
-    fig, ax = plt.subplots()
-    cs = ax.imshow(img_set[:, :, 22], cmap='bone')
-    # cbar = fig.colorbar(cs)
-    plt.show()
-    plt.pause(1)
+    # # Example plot
+    # fig, ax = plt.subplots()
+    # cs = ax.imshow(img_set_blur[:, :, 22], cmap='bone')
+    # fig, ax = plt.subplots()
+    # cs = ax.imshow(img_set[:, :, 22], cmap='bone')
+    # # cbar = fig.colorbar(cs)
+    # plt.show()
+    # plt.pause(1)
 
     return img_set_blur
 

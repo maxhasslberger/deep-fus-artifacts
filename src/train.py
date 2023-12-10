@@ -61,9 +61,9 @@ def main(n_img=100):
     
     print('Training ResUNet model with ' +str(n_img) +' images!')
     
-    # n_epochs = 2500
-    n_epochs = 1
-    # data_new = open_dat_file("D:/riseo/Documents/TUM/4 Sem - AUC/Machine Learning/fUS Project/Emilie Data/Compounds/")
+    n_epochs = 2500
+    # n_epochs = 5000
+    # n_epochs = 1
 
     ############
     # INITIALIZE 
@@ -89,8 +89,8 @@ def main(n_img=100):
     ##########
     
     # Load TRAIN and DEV datasets
-    X_train, Y_train = load_dataset_add_motion('train', n_img, 30)
-    X_dev, Y_dev = load_dataset_add_motion('dev', n_img, 10)
+    X_train, Y_train = load_dataset_add_motion('train', n_img, 1200)
+    X_dev, Y_dev = load_dataset_add_motion('dev', n_img, 320)
 
     # Standardize X data
     Xmean = np.mean(X_train)

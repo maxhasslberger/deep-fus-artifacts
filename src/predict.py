@@ -19,7 +19,8 @@ n_img = 100
 # LOAD MODEL AND DATA
 #####################
 
-m = 3
+m = 1
+# m = 10
 
 # Load model 
 model = tf.keras.models.load_model(model_dir +'/my_model.h5', custom_objects={'loss': custom_loss(beta=0.1), 'ssim': ssim, 'psnr': psnr, 'nmse': nmse, 'nrmse': nrmse})
