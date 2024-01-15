@@ -1,4 +1,4 @@
-# Deep-fUS-artifacts: A deep learning network for functional ultrasound imaging of the brain for reconstruction of motion artifact-affected compound frames (fork of Tommaso Di Ianni's Deep-fUS project)
+# Deep-fUS-artifacts: A deep learning network for functional ultrasound imaging of the brain for reconstruction of motion artifact-affected compound frames (fork from Tommaso Di Ianni's Deep-fUS project)
 
 ## Description
 
