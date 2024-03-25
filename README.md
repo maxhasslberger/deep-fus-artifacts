@@ -1,8 +1,8 @@
-# Deep-fUS-artifacts: A deep learning network for functional ultrasound imaging of the brain for reconstruction of motion artifact-affected compound frames (fork from Tommaso Di Ianni's Deep-fUS project)
+# Deep-fUS-artifacts: A deep learning network for functional ultrasound imaging of the brain for the reconstruction of motion artifact-affected compound frames
 
 ## Description
 
-This repository contains the software to convert motion artifact-affected compound frames into Power Doppler images. 
+This repository contains the software to convert motion artifact-affected compound frames into Power Doppler images based on sagittal recordings provided by Emilie Mace (Max Planck Institute for Biological Intelligence). 
 
 Functional ultrasound (fUS) is a rapidly emerging modality that enables whole-brain imaging of neural activity in awake and mobile rodents. To achieve sufficient blood flow sensitivity in the brain microvasculature, fUS relies on long ultrasound data acquisitions at high frame rates, posing high demands on the sampling and processing hardware. We developed an end-to-end image reconstruction approach based on deep learning that improves the image quality of the resulting Power Doppler images. We distorted compound images obtained under ideal conditions to train the CNN on the characteristics of motion artifacts and still compare them to the (optimal) ground truth images. Therefore, we used a Markov model to mimic translations and rotations over time and blurred individual compounds at random amplitudes.
 
